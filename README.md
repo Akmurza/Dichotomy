@@ -7,15 +7,18 @@ from scholarly articles and fiction, written by real authors, creating
 memorable, contrasting contexts for better vocabulary retention.
 
 ## Team
-Aleksandr Kuklin (tl), Franco Ermacora, Josue Hernandez Gotay, Carl Benedict Patague Mislang
+- Aleksandr Kuklin (tl), 
+- Franco Ermacora, 
+- Josue Hernandez Gotay,
+- Carl Benedict Patague Mislang
 
 ## Tech Stack
--Next.js(App Router),TypeScript
--Science data: OpenAlex API
--Fantasy/RPG data: D&D 5e SRD API, Gutendex (Project Gutenberg)
--Synonym fallback: Datamuse API (optional)
--Database: PostgreSQL via Supabase
--Deployment: Vercel + Supabase
+- Next.js(App Router),TypeScript
+- Science data: OpenAlex API
+- Fantasy/RPG data: D&D 5e SRD API, Gutendex (Project Gutenberg)
+- Synonym fallback: Datamuse API (optional)
+- Database: PostgreSQL via Supabase
+- Deployment: Vercel + Supabase
 
 ## Status
 Active
