@@ -1,2 +1,21 @@
 # Dichotomy
-Dichotomy is a language tool that shows real, non-generated word usage examples from two opposing domains: Science and Fantasy. Unlike AI-generated sentences, this pulls authentic sharply real snippets from scholarly articles and fiction, written by a real author, creating memorable contrasting contexts for better vocabulary retention.
+
+Dichotomy is a language tool that shows real, non-generated word usage 
+examples from two opposing domains: Science and Fantasy. Unlike 
+AI-generated sentences, it pulls authentic, sharply contrasting snippets 
+from scholarly articles and fiction, written by real authors, creating 
+memorable, contrasting contexts for better vocabulary retention.
+
+## Team
+Aleksandr Kuklin (tl), Franco Ermacora, Josue Hernandez Gotay, Carl Benedict Patague Mislang
+
+## Tech Stack
+-Next.js(App Router),TypeScript
+-Science data: OpenAlex API
+-Fantasy/RPG data: D&D 5e SRD API, Gutendex (Project Gutenberg)
+-Synonym fallback: Datamuse API (optional)
+-Database: PostgreSQL via Supabase
+-Deployment: Vercel + Supabase
+
+## Status
+Active
