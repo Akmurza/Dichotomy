@@ -25,3 +25,4 @@ Active
 
 ## Favorite quote
 "Some bytes can change the world"
+"Everything can be taken from a man but one thing: the last of the human freedoms - to choose one's attitude in any given set of circumstances."
