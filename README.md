@@ -24,4 +24,4 @@ memorable, contrasting contexts for better vocabulary retention.
 Active
 
 ## Favorite quote
-"Some bites can change the world"
+"Some bytes can change the world"
