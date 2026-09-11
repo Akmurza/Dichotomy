@@ -22,3 +22,6 @@ memorable, contrasting contexts for better vocabulary retention.
 
 ## Status
 Active
+
+## Favorite quote
+"Some bites can change the world"
