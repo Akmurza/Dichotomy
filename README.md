@@ -22,7 +22,3 @@ memorable, contrasting contexts for better vocabulary retention.
 
 ## Status
 Active
-
-## Favorite Quotes
-
-Josué Gotay: "Some bites can change the world".
