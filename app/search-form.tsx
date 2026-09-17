@@ -85,7 +85,7 @@ function ResultCard({ title, result, type }: { title: string; result: Result; ty
       <p className="card-label">{title}</p>
       <blockquote>
         “{type === "fantasy"
-          ? result.sentence.split(" ").map((word, index) => <span className="fragment" style={{ "--fragment-index": index } as CSSProperties} key={`${word}-${index}`}>{word} </span>)
+          ? result.sentence.split(" ").map((word, index) => <span className="fragment" style={{ "--fragment-index": index } as CSSProperties} key={`${word}-${index}`}>{word}</span>)
           : result.sentence}”
       </blockquote>
       <p className="source">{result.source}</p>
