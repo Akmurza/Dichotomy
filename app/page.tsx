@@ -32,7 +32,7 @@ export default function Home() {
       <section className="hero">
         <div className="hero-copy">
           <p className="eyebrow">Vocabulary / extreme contexts</p>
-          <h1>Put a word<br /><span>under pressure.</span></h1>
+          <h1>Put a <span className="flicker">word</span><br /><span>under pressure.</span></h1>
           <p className="intro">See the same language collide with a scientific paper and a fantasy world. Real sources, sharply different worlds.</p>
           <SearchForm />
         </div>

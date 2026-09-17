@@ -53,6 +53,7 @@ body {
   font-size: 18px;
   text-transform: none;
   font-family: var(--font-geist-sans), sans-serif;
+
 }
 
 .status, .eyebrow, .card-label, .hero-index {
@@ -114,6 +115,8 @@ h1 span {
 }
 
 .search-form {
+  position: relative;
+  z-index: 40;
   max-width: 720px;
 }
 
@@ -167,7 +170,7 @@ button:disabled {
   position: relative;
   z-index: 30;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 0.5fr 1fr;
   gap: 0;
   margin-top: 72px;
   width: calc(100vw - 8vw);
@@ -179,35 +182,63 @@ button:disabled {
   position: relative;
   z-index: 31;
   min-height: 310px;
-  padding: 24px;
+  padding: 20px;
   background: transparent;
 }
 
 .result-science {
+  position: relative;
   background: var(--science);
   color: var(--white);
+  overflow: visible;
 }
+
+.result-science::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -590px;
+  width: 100%;
+  height: 590px;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom,
+      transparent 0%,
+      rgba(255, 106, 0, .05) 35%,
+      rgba(255, 106, 0, .3) 70%,
+      var(--science) 100%);
+}
+
+.result-science .card-label,
+.result-science blockquote,
+.result-science .source {
+  position: relative;
+  z-index: 1;
+}
+
+
 
 /* experemental fantasy block*/
 .result-fantasy {
   position: relative;
   background: rgba(183, 216, 230, .55);
   border-style: solid;
-  border-width: 25px 6px 16px 14px;
+  border-width: 105px 0px 106px 0px;
   /* assymetry*/
   border-image: linear-gradient(115deg,
-      #ffffff 0%,
-      #b8d0dc 8%,
-      #ffffff 34%,
-      #d7dde0 52%,
-      #ffffff 68%,
+      #e1f3f7 0%,
+      hsl(199, 29%, 78%) 8%,
+      #c2b4b4 28%,
+      #f1eaea 34%,
+      #d4e8f3 52%,
+      #efc9c9 68%,
       #b8d0dc 96%,
-      #ffffff 100%) 1;
+      #f0ebeb 100%) 1;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, .9),
     inset 0 0 60px rgba(255, 255, 255, .4),
     0 8px 32px rgba(0, 0, 0, .25);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .result-fantasy::before {
@@ -225,6 +256,62 @@ button:disabled {
 .result-fantasy blockquote {
   position: relative;
   z-index: 1;
+}
+
+
+
+
+
+.flicker {
+  color: var(--black);
+  animation: bulb-flicker 4s linear infinite;
+}
+
+@keyframes bulb-flicker {
+
+  0% {
+    opacity: 1;
+  }
+
+  2% {
+    opacity: .3;
+  }
+
+  40% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: .5;
+  }
+
+  40% {
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  44% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  71% {
+    opacity:1;
+  }
+
+  3% {
+    opacity: 1;
+  }
 }
 
 
