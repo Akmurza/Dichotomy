@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #e7e8e3;
+  --background: #e8f0ff; /*Alice Blue*/
   --foreground: #171a1b;
   --blue: #b8d0dc;
   --orange: #ff6a00;
   --science: #ff6a00;
   --mist: #d7dde0;
-  --white: #f7f7f2;
+  --white: #ffffff;
 }
 
 @theme inline {
@@ -127,18 +127,6 @@ h1 span {
   font-weight: 700;
   font-family: var(--font-geist-mono), monospace;
   text-transform: uppercase;
-}
-
-@import "tailwindcss";
-
-:root {
-  --background: #e7e8e3;
-  --foreground: #171a1b;
-  --blue: #b8d0dc;
-  --orange: #ff6a00;
-  --science: #ff6a00;
-  --mist: #d7dde0;
-  --white: #f7f7f2;
 }
 
 @theme inline {
