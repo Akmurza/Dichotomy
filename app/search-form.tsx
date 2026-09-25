@@ -17,7 +17,9 @@ type SearchResponse = {
   demo?: boolean;
 };
 
-export default function SearchForm() {
+type PhotoMotion = "idle" | "breaking" | "reassembled";
+
+export default function SearchForm({ onPhotoMotion }: { onPhotoMotion: (motion: PhotoMotion) => void }) {
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<SearchResponse | null>(null);
   const [error, setError] = useState("");
@@ -27,6 +29,7 @@ export default function SearchForm() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
+    onPhotoMotion("breaking");
     setError("");
     if (result) setMotion("dissolve");
 
@@ -38,6 +41,7 @@ export default function SearchForm() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Search failed.");
+      onPhotoMotion("reassembled");
       if (!result) {
         setResult(data);
         setMotion("reveal");
@@ -52,6 +56,7 @@ export default function SearchForm() {
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Search failed.");
       setMotion("idle");
+      onPhotoMotion("idle");
     } finally {
       setLoading(false);
     }
