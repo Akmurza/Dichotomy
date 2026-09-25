@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState, type CSSProperties } from "react";
+import { Fragment, FormEvent, useState, type CSSProperties } from "react";
 
 type Result = {
   sentence: string;
@@ -85,7 +85,11 @@ function ResultCard({ title, result, type }: { title: string; result: Result; ty
       <p className="card-label">{title}</p>
       <blockquote>
         “{type === "fantasy"
-          ? result.sentence.split(" ").map((word, index) => <span className="fragment" style={{ "--fragment-index": index } as CSSProperties} key={`${word}-${index}`}>{word}</span>)
+          ? result.sentence.split(" ").map((word, index) => (
+            <Fragment key={`${word}-${index}`}>
+              {index > 0 && " "}<span className="fragment" style={{ "--fragment-index": index } as CSSProperties}>{word}</span>
+            </Fragment>
+          ))
           : result.sentence}”
       </blockquote>
       <p className="source">{result.source}</p>

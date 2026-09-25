@@ -18,6 +18,16 @@ const GUTENBERG_BOOKS = [
   { id: 55, title: "The Wonderful Wizard of Oz", author: "L. Frank Baum" },
   { id: 11, title: "Alice's Adventures in Wonderland", author: "Lewis Carroll" },
   { id: 708, title: "The Princess and the Goblin", author: "George MacDonald" },
+  { id: 1251, title: "Le Morte d'Arthur", author: "Thomas Malory" },
+  { id: 16328, title: "The Story of Siegfried", author: "James Baldwin" },
+  { id: 1281, title: "The Arabian Nights Entertainments", author: "Andrew Lang" },
+  { id: 1661, title: "The Adventures of Sherlock Holmes", author: "Arthur Conan Doyle" },
+  { id: 174, title: "The Picture of Dorian Gray", author: "Oscar Wilde" },
+  { id: 5200, title: "Metamorphosis", author: "Franz Kafka" },
+  { id: 729, title: "The Odyssey", author: "Homer" },
+  { id: 22382, title: "The Enchanted Type-Writer", author: "John Kendrick Bangs" },
+  { id: 3207, title: "Of Water and the Spirit", author: "Henryk Sienkiewicz" },
+  { id: 236, title: "The Jungle Book", author: "Rudyard Kipling" },
 ];
 
 type SrdItem = { index?: string; name?: string; desc?: string | string[] };
@@ -69,16 +79,6 @@ async function fetchResponse(url: string): Promise<Response> {
   throw new Error(`Request failed after 3 attempts: ${url}`, { cause: lastError });
 }
 
-async function fetchJson<T>(url: string): Promise<T> {
-  const response = await fetchResponse(url);
-  try {
-    return await response.json() as T;
-  } catch (error) {
-    console.error(`Fetch failed for ${url}; cause: ${error instanceof Error ? error.cause ?? error.message : error}`);
-    throw error;
-  }
-}
-
 async function fetchText(url: string): Promise<string> {
   const response = await fetchResponse(url);
   try {
@@ -102,6 +102,8 @@ function splitSentences(rawText: string): string[] {
     .replace(/END OF (?:THE )?PROJECT GUTENBERG EBOOK[^\n]*/gi, "")
     .replace(/\n\n+/g, " <paragraph-boundary> ")
     .replace(/\n/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/([.!?])([A-Z])/g, "$1 $2")
     .replace(/\s+/g, " ")
     .trim();
 

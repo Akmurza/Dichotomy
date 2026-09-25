@@ -554,7 +554,8 @@ blockquote {
 .word-substance {
   position: absolute;
   z-index: 3;
-  top: 34%;
+  top: auto;
+  bottom: 0;
   left: 42%;
   width: 120px;
   height: 120px;
@@ -586,13 +587,13 @@ blockquote {
 @keyframes substance-to-photo {
   0% { opacity: 0; transform: translate(0, 0) scale(.35); }
   24% { opacity: .9; transform: translate(0, 0) scale(1); }
-  64% { opacity: .82; transform: translate(34vw, -29vh) scale(.7); }
-  100% { opacity: 0; transform: translate(46vw, -50vh) scale(.06); }
+  64% { opacity: .82; transform: translate(34vw, 12vh) scale(.7); }
+  100% { opacity: 0; transform: translate(46vw, 18vh) scale(.06); }
 }
 
 @keyframes substance-from-photo {
-  0% { opacity: 0; transform: translate(46vw, -50vh) scale(.06); }
-  28% { opacity: .8; transform: translate(34vw, -29vh) scale(.7); }
+  0% { opacity: 0; transform: translate(46vw, 18vh) scale(.06); }
+  28% { opacity: .8; transform: translate(34vw, 12vh) scale(.7); }
   76% { opacity: .8; transform: translate(0, 0) scale(1); }
   100% { opacity: 0; transform: translate(0, 0) scale(.25); }
 }
@@ -641,10 +642,10 @@ blockquote {
 }
 
 .photo-fabric {
-  clip-path: polygon(17% 48%, 83% 48%, 83% 91%, 17% 91%);
+  clip-path: polygon(17% 58%, 83% 58%, 83% 100%, 17% 100%);
   filter: url(#fabric-wind);
   animation: fabric-sway 5s ease-in-out infinite;
-  transform-origin: 52% 62%;
+  transform-origin: 52% 82%;
 }
 
 .filter-definitions {
@@ -930,7 +931,8 @@ blockquote {
 .word-substance {
   position: absolute;
   z-index: 3;
-  top: 34%;
+  top: auto;
+  bottom: 0;
   left: 42%;
   width: 120px;
   height: 120px;
@@ -962,13 +964,13 @@ blockquote {
 @keyframes substance-to-photo {
   0% { opacity: 0; transform: translate(0, 0) scale(.35); }
   24% { opacity: .9; transform: translate(0, 0) scale(1); }
-  64% { opacity: .82; transform: translate(34vw, -29vh) scale(.7); }
-  100% { opacity: 0; transform: translate(46vw, -50vh) scale(.06); }
+  64% { opacity: .82; transform: translate(34vw, 12vh) scale(.7); }
+  100% { opacity: 0; transform: translate(46vw, 18vh) scale(.06); }
 }
 
 @keyframes substance-from-photo {
-  0% { opacity: 0; transform: translate(46vw, -50vh) scale(.06); }
-  28% { opacity: .8; transform: translate(34vw, -29vh) scale(.7); }
+  0% { opacity: 0; transform: translate(46vw, 18vh) scale(.06); }
+  28% { opacity: .8; transform: translate(34vw, 12vh) scale(.7); }
   76% { opacity: .8; transform: translate(0, 0) scale(1); }
   100% { opacity: 0; transform: translate(0, 0) scale(.25); }
 }
@@ -1017,10 +1019,10 @@ blockquote {
 }
 
 .photo-fabric {
-  clip-path: polygon(17% 48%, 83% 48%, 83% 91%, 17% 91%);
+  clip-path: polygon(17% 58%, 83% 58%, 83% 100%, 17% 100%);
   filter: url(#fabric-wind);
   animation: fabric-sway 5s ease-in-out infinite;
-  transform-origin: 52% 62%;
+  transform-origin: 52% 82%;
 }
 
 .filter-definitions {
