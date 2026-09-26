@@ -1,7 +1,14 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
 import SearchForm from "./search-form";
 
+type PhotoMotion = "idle" | "breaking" | "reassembled";
+
 export default function Home() {
+  const [photoMotion, setPhotoMotion] = useState<PhotoMotion>("idle");
+
   return (
     <main className="shell">
       <svg className="filter-definitions" aria-hidden="true">
@@ -34,11 +41,21 @@ export default function Home() {
           <p className="eyebrow">Vocabulary / extreme contexts</p>
           <h1>Put a <span className="flicker">word</span><br /><span>under pressure.</span></h1>
           <p className="intro">See the same language collide with a scientific paper and a fantasy world. Real sources, sharply different worlds.</p>
-          <SearchForm />
+          <SearchForm onPhotoMotion={setPhotoMotion} />
         </div>
-        <div className="photo-stage" aria-label="Laundry moving above a Tbilisi courtyard">
-          <Image className="photo photo-still" src="/images.jpeg" alt="Laundry hanging from an old Tbilisi building" fill sizes="(max-width: 640px) 100vw, 44vw" priority />
-          <Image className="photo photo-fabric" src="/images.jpeg" alt="" aria-hidden="true" fill sizes="(max-width: 640px) 100vw, 44vw" />
+        <div className={`photo-stage is-${photoMotion}`} aria-label="Laundry moving above a Tbilisi courtyard">
+          {Array.from({ length: 6 }, (_, index) => (
+            <Image
+              className={`photo-piece photo-piece-${index + 1}`}
+              src="/images.jpeg"
+              alt={index === 0 ? "Laundry hanging from an old Tbilisi building" : ""}
+              aria-hidden={index !== 0}
+              fill
+              sizes="(max-width: 640px) 100vw, 44vw"
+              priority={index === 0}
+              key={index}
+            />
+          ))}
         </div>
       </section>
     </main>

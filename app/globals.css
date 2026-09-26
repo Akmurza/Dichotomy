@@ -68,12 +68,12 @@ body {
   gap: 6vw;
   min-height: calc(100vh - 88px);
   padding: clamp(64px, 10vh, 120px) 0 72px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .hero-copy {
   position: relative;
-  z-index: 1;
+  z-index: 10;
 }
 
 .eyebrow {
@@ -305,7 +305,8 @@ button:disabled {
 
 .results {
   position: relative;
-  z-index: 30;
+  z-index: 50;
+  isolation: isolate;
   display: grid;
   grid-template-columns: 0.5fr 1fr;
   gap: 0;
@@ -344,6 +345,29 @@ button:disabled {
       rgba(255, 106, 0, .05) 35%,
       rgba(255, 106, 0, .3) 70%,
       var(--science) 100%);
+}
+
+.result-science::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  padding: 8%;
+  color: rgba(255, 255, 255, .22);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: clamp(18px, 2vw, 32px);
+  font-weight: 700;
+  line-height: 1.8;
+  letter-spacing: .14em;
+  text-align: center;
+  white-space: pre;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, .18) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, .18) 1px, transparent 1px);
+  background-size: 26px 26px;
+  pointer-events: none;
 }
 
 .result-science .card-label,
@@ -554,7 +578,8 @@ blockquote {
 .word-substance {
   position: absolute;
   z-index: 3;
-  top: 34%;
+  top: auto;
+  bottom: 0;
   left: 42%;
   width: 120px;
   height: 120px;
@@ -586,13 +611,13 @@ blockquote {
 @keyframes substance-to-photo {
   0% { opacity: 0; transform: translate(0, 0) scale(.35); }
   24% { opacity: .9; transform: translate(0, 0) scale(1); }
-  64% { opacity: .82; transform: translate(34vw, -29vh) scale(.7); }
-  100% { opacity: 0; transform: translate(46vw, -50vh) scale(.06); }
+  64% { opacity: .82; transform: translate(34vw, 12vh) scale(.7); }
+  100% { opacity: 0; transform: translate(46vw, 18vh) scale(.06); }
 }
 
 @keyframes substance-from-photo {
-  0% { opacity: 0; transform: translate(46vw, -50vh) scale(.06); }
-  28% { opacity: .8; transform: translate(34vw, -29vh) scale(.7); }
+  0% { opacity: 0; transform: translate(46vw, 18vh) scale(.06); }
+  28% { opacity: .8; transform: translate(34vw, 12vh) scale(.7); }
   76% { opacity: .8; transform: translate(0, 0) scale(1); }
   100% { opacity: 0; transform: translate(0, 0) scale(.25); }
 }
@@ -624,27 +649,114 @@ blockquote {
   align-self: start;
   width: 100%;
   margin-top: 0;
-  height: calc(100vh - 60px);
-  min-height: 780px;
+  height: 100%;
+  min-height: 900px;
+  margin-right: -2vw;
   aspect-ratio: auto;
   overflow: hidden;
-  background: var(--blue);
+  z-index: 0;
+  background: #b9aecb;
 }
 
-.photo {
+.photo-stage::before {
+  content: "DICHOTOMY  DICHOTOMY  DICHOTOMY\A DICHOTOMY  DICHOTOMY  DICHOTOMY\A DICHOTOMY  DICHOTOMY  DICHOTOMY\A DICHOTOMY  DICHOTOMY  DICHOTOMY";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  padding: 10%;
+  color: rgba(255, 255, 255, .68);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: clamp(18px, 2.2vw, 36px);
+  font-weight: 700;
+  line-height: 1.7;
+  letter-spacing: .16em;
+  text-align: center;
+  white-space: pre;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, .22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, .22) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.photo-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, var(--background) 0%, transparent 17%),
+    linear-gradient(to right, var(--background) 0%, transparent 13%);
+  opacity: .92;
+}
+
+.photo-piece {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center 58%;
+  z-index: 2;
+  transform: scale(1);
+  filter: url(#fabric-wind);
+  transition: transform 900ms cubic-bezier(.2, .8, .2, 1);
 }
 
-.photo-fabric {
-  clip-path: polygon(17% 48%, 83% 48%, 83% 91%, 17% 91%);
-  filter: url(#fabric-wind);
-  animation: fabric-sway 5s ease-in-out infinite;
-  transform-origin: 52% 62%;
+.photo-piece-1 { clip-path: polygon(0 0, 33.34% 0, 33.34% 50%, 0 50%); }
+.photo-piece-2 { clip-path: polygon(33.34% 0, 66.67% 0, 66.67% 50%, 33.34% 50%); }
+.photo-piece-3 { clip-path: polygon(66.67% 0, 100% 0, 100% 50%, 66.67% 50%); }
+.photo-piece-4 { clip-path: polygon(0 50%, 33.34% 50%, 33.34% 100%, 0 100%); }
+.photo-piece-5 { clip-path: polygon(33.34% 50%, 66.67% 50%, 66.67% 100%, 33.34% 100%); }
+.photo-piece-6 { clip-path: polygon(66.67% 50%, 100% 50%, 100% 100%, 66.67% 100%); }
+
+.photo-stage.is-breaking .photo-piece {
+  animation: photo-piece-break 460ms cubic-bezier(.55, 0, .2, 1) both;
+}
+
+.photo-stage.is-breaking .photo-piece-1 { animation-delay: 0ms; }
+.photo-stage.is-breaking .photo-piece-2 { animation-delay: 55ms; }
+.photo-stage.is-breaking .photo-piece-3 { animation-delay: 115ms; }
+.photo-stage.is-breaking .photo-piece-4 { animation-delay: 35ms; }
+.photo-stage.is-breaking .photo-piece-5 { animation-delay: 90ms; }
+.photo-stage.is-breaking .photo-piece-6 { animation-delay: 150ms; }
+
+.photo-stage.is-reassembled .photo-piece {
+  animation: photo-piece-reassemble 950ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.photo-stage.is-reassembled .photo-piece-1 { animation-delay: 90ms; }
+.photo-stage.is-reassembled .photo-piece-2 { animation-delay: 20ms; }
+.photo-stage.is-reassembled .photo-piece-3 { animation-delay: 140ms; }
+.photo-stage.is-reassembled .photo-piece-4 { animation-delay: 55ms; }
+.photo-stage.is-reassembled .photo-piece-5 { animation-delay: 115ms; }
+.photo-stage.is-reassembled .photo-piece-6 { animation-delay: 0ms; }
+
+.photo-stage.is-reassembled .photo-piece-1,
+.photo-stage.is-reassembled .photo-piece-4 { object-position: 47% 55%; }
+.photo-stage.is-reassembled .photo-piece-2,
+.photo-stage.is-reassembled .photo-piece-5 { object-position: 51% 58%; }
+.photo-stage.is-reassembled .photo-piece-3,
+.photo-stage.is-reassembled .photo-piece-6 { object-position: 54% 61%; }
+
+.photo-piece-1 { --piece-x: -34px; --piece-y: -24px; --piece-rotate: -4deg; }
+.photo-piece-2 { --piece-x: 0px; --piece-y: -42px; --piece-rotate: 2deg; }
+.photo-piece-3 { --piece-x: 38px; --piece-y: -18px; --piece-rotate: 5deg; }
+.photo-piece-4 { --piece-x: -42px; --piece-y: 26px; --piece-rotate: -5deg; }
+.photo-piece-5 { --piece-x: 4px; --piece-y: 44px; --piece-rotate: 3deg; }
+.photo-piece-6 { --piece-x: 46px; --piece-y: 24px; --piece-rotate: 6deg; }
+
+@keyframes photo-piece-break {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0) scale(1); }
+  100% { opacity: .78; transform: translate(var(--piece-x), var(--piece-y)) rotate(var(--piece-rotate)) scale(.98); }
+}
+
+@keyframes photo-piece-reassemble {
+  0% { opacity: .78; transform: translate(var(--piece-x), var(--piece-y)) rotate(var(--piece-rotate)) scale(.98); }
+  68% { opacity: 1; transform: translate(0, 0) rotate(0) scale(1.075); }
+  100% { opacity: 1; transform: translate(0, 0) rotate(0) scale(1.05); }
 }
 
 .filter-definitions {
@@ -930,7 +1042,8 @@ blockquote {
 .word-substance {
   position: absolute;
   z-index: 3;
-  top: 34%;
+  top: auto;
+  bottom: 0;
   left: 42%;
   width: 120px;
   height: 120px;
@@ -962,13 +1075,13 @@ blockquote {
 @keyframes substance-to-photo {
   0% { opacity: 0; transform: translate(0, 0) scale(.35); }
   24% { opacity: .9; transform: translate(0, 0) scale(1); }
-  64% { opacity: .82; transform: translate(34vw, -29vh) scale(.7); }
-  100% { opacity: 0; transform: translate(46vw, -50vh) scale(.06); }
+  64% { opacity: .82; transform: translate(34vw, 12vh) scale(.7); }
+  100% { opacity: 0; transform: translate(46vw, 18vh) scale(.06); }
 }
 
 @keyframes substance-from-photo {
-  0% { opacity: 0; transform: translate(46vw, -50vh) scale(.06); }
-  28% { opacity: .8; transform: translate(34vw, -29vh) scale(.7); }
+  0% { opacity: 0; transform: translate(46vw, 18vh) scale(.06); }
+  28% { opacity: .8; transform: translate(34vw, 12vh) scale(.7); }
   76% { opacity: .8; transform: translate(0, 0) scale(1); }
   100% { opacity: 0; transform: translate(0, 0) scale(.25); }
 }
@@ -1000,27 +1113,114 @@ blockquote {
   align-self: start;
   width: 100%;
   margin-top: 0;
-  height: calc(100vh - 60px);
-  min-height: 780px;
+  height: 100%;
+  min-height: 900px;
+  margin-right: -2vw;
   aspect-ratio: auto;
   overflow: hidden;
-  background: var(--blue);
+  z-index: 0;
+  background: #b9aecb;
 }
 
-.photo {
+.photo-stage::before {
+  content: "DICHOTOMY  DICHOTOMY  DICHOTOMY\A DICHOTOMY  DICHOTOMY  DICHOTOMY\A DICHOTOMY  DICHOTOMY  DICHOTOMY\A DICHOTOMY  DICHOTOMY  DICHOTOMY";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  padding: 10%;
+  color: rgba(255, 255, 255, .68);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: clamp(18px, 2.2vw, 36px);
+  font-weight: 700;
+  line-height: 1.7;
+  letter-spacing: .16em;
+  text-align: center;
+  white-space: pre;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, .22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, .22) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.photo-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, var(--background) 0%, transparent 17%),
+    linear-gradient(to right, var(--background) 0%, transparent 13%);
+  opacity: .92;
+}
+
+.photo-piece {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center 58%;
+  z-index: 2;
+  transform: scale(1);
+  filter: url(#fabric-wind);
+  transition: transform 900ms cubic-bezier(.2, .8, .2, 1);
 }
 
-.photo-fabric {
-  clip-path: polygon(17% 48%, 83% 48%, 83% 91%, 17% 91%);
-  filter: url(#fabric-wind);
-  animation: fabric-sway 5s ease-in-out infinite;
-  transform-origin: 52% 62%;
+.photo-piece-1 { clip-path: polygon(0 0, 33.34% 0, 33.34% 50%, 0 50%); }
+.photo-piece-2 { clip-path: polygon(33.34% 0, 66.67% 0, 66.67% 50%, 33.34% 50%); }
+.photo-piece-3 { clip-path: polygon(66.67% 0, 100% 0, 100% 50%, 66.67% 50%); }
+.photo-piece-4 { clip-path: polygon(0 50%, 33.34% 50%, 33.34% 100%, 0 100%); }
+.photo-piece-5 { clip-path: polygon(33.34% 50%, 66.67% 50%, 66.67% 100%, 33.34% 100%); }
+.photo-piece-6 { clip-path: polygon(66.67% 50%, 100% 50%, 100% 100%, 66.67% 100%); }
+
+.photo-stage.is-breaking .photo-piece {
+  animation: photo-piece-break 460ms cubic-bezier(.55, 0, .2, 1) both;
+}
+
+.photo-stage.is-breaking .photo-piece-1 { animation-delay: 0ms; }
+.photo-stage.is-breaking .photo-piece-2 { animation-delay: 55ms; }
+.photo-stage.is-breaking .photo-piece-3 { animation-delay: 115ms; }
+.photo-stage.is-breaking .photo-piece-4 { animation-delay: 35ms; }
+.photo-stage.is-breaking .photo-piece-5 { animation-delay: 90ms; }
+.photo-stage.is-breaking .photo-piece-6 { animation-delay: 150ms; }
+
+.photo-stage.is-reassembled .photo-piece {
+  animation: photo-piece-reassemble 950ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.photo-stage.is-reassembled .photo-piece-1 { animation-delay: 90ms; }
+.photo-stage.is-reassembled .photo-piece-2 { animation-delay: 20ms; }
+.photo-stage.is-reassembled .photo-piece-3 { animation-delay: 140ms; }
+.photo-stage.is-reassembled .photo-piece-4 { animation-delay: 55ms; }
+.photo-stage.is-reassembled .photo-piece-5 { animation-delay: 115ms; }
+.photo-stage.is-reassembled .photo-piece-6 { animation-delay: 0ms; }
+
+.photo-stage.is-reassembled .photo-piece-1,
+.photo-stage.is-reassembled .photo-piece-4 { object-position: 47% 55%; }
+.photo-stage.is-reassembled .photo-piece-2,
+.photo-stage.is-reassembled .photo-piece-5 { object-position: 51% 58%; }
+.photo-stage.is-reassembled .photo-piece-3,
+.photo-stage.is-reassembled .photo-piece-6 { object-position: 54% 61%; }
+
+.photo-piece-1 { --piece-x: -34px; --piece-y: -24px; --piece-rotate: -4deg; }
+.photo-piece-2 { --piece-x: 0px; --piece-y: -42px; --piece-rotate: 2deg; }
+.photo-piece-3 { --piece-x: 38px; --piece-y: -18px; --piece-rotate: 5deg; }
+.photo-piece-4 { --piece-x: -42px; --piece-y: 26px; --piece-rotate: -5deg; }
+.photo-piece-5 { --piece-x: 4px; --piece-y: 44px; --piece-rotate: 3deg; }
+.photo-piece-6 { --piece-x: 46px; --piece-y: 24px; --piece-rotate: 6deg; }
+
+@keyframes photo-piece-break {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0) scale(1); }
+  100% { opacity: .78; transform: translate(var(--piece-x), var(--piece-y)) rotate(var(--piece-rotate)) scale(.98); }
+}
+
+@keyframes photo-piece-reassemble {
+  0% { opacity: .78; transform: translate(var(--piece-x), var(--piece-y)) rotate(var(--piece-rotate)) scale(.98); }
+  68% { opacity: 1; transform: translate(0, 0) rotate(0) scale(1.075); }
+  100% { opacity: 1; transform: translate(0, 0) rotate(0) scale(1.05); }
 }
 
 .filter-definitions {

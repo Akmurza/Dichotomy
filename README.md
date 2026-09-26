@@ -8,7 +8,7 @@ retention.
 ## Team
 
 - Aleksandr Kuklin (tl),
-- Franco Ermacora,
+- Franco Ermácora,
 - Josue Hernandez Gotay,
 - Carl Benedict Patague Mislang
 

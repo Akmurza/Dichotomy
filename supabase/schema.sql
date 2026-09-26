@@ -1,7 +1,7 @@
 create extension if not exists pgcrypto;
 create table if not exists public.rpg_entries (
     id uuid primary key default gen_random_uuid(),
-    source_type text not null check (source_type in ('dnd', 'gutenberg')),
+    source_type text not null check (source_type in ('srd', 'gutenberg')),
     source_title text not null,
     source_author text,
     source_url text,
@@ -10,6 +10,12 @@ create table if not exists public.rpg_entries (
     content_tsv tsvector generated always as (to_tsvector('english', content)) stored,
     created_at timestamptz not null default now()
 );
+alter table public.rpg_entries drop constraint if exists rpg_entries_source_type_check;
+update public.rpg_entries
+set source_type = 'srd'
+where source_type = 'dnd';
+alter table public.rpg_entries
+add constraint rpg_entries_source_type_check check (source_type in ('srd', 'gutenberg'));
 create index if not exists rpg_entries_content_tsv_idx on public.rpg_entries using gin (content_tsv);
 create table if not exists public.search_cache (
     id uuid primary key default gen_random_uuid(),
@@ -39,6 +45,12 @@ insert to anon,
 create policy "Public can read search cache" on public.search_cache for
 select to anon,
     authenticated using (true);
+create policy "Public can insert search cache" on public.search_cache for
+insert to anon,
+    authenticated with check (true);
+create policy "Public can update search cache" on public.search_cache for
+update to anon,
+    authenticated using (true) with check (true);
 create policy "Public can insert saved items" on public.saved_items for
 insert to anon,
     authenticated with check (true);
