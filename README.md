@@ -7,9 +7,9 @@ retention.
 
 ## Team
 
-- Aleksandr Kuklin (tl),
-- Franco Ermácora,
-- Josue Hernandez Gotay,
+- Aleksandr Kuklin (tl)
+- Franco Ermácora
+- Josue Hernandez Gotay
 - Carl Benedict Patague Mislang
 
 ## Tech Stack
