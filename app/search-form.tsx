@@ -1,21 +1,10 @@
 "use client";
 
-import { Fragment, FormEvent, useState, type CSSProperties } from "react";
+import { Fragment, FormEvent, useEffect, useState, type CSSProperties } from "react";
+import { getDeviceId } from "@/lib/device-id";
+import type { SearchResponse, SearchResult, SearchSideState } from "@/lib/search-types";
 
-type Result = {
-  sentence: string;
-  source: string;
-  sourceUrl: string | null;
-  isFallback?: boolean;
-};
-
-type SearchResponse = {
-  query: string;
-  science: Result;
-  fantasy: Result;
-  cached: boolean;
-  demo?: boolean;
-};
+type ResultCardState = SearchSideState | { status: "loading" };
 
 type PhotoMotion = "idle" | "breaking" | "reassembled";
 
@@ -25,6 +14,14 @@ export default function SearchForm({ onPhotoMotion }: { onPhotoMotion: (motion: 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [motion, setMotion] = useState<"idle" | "dissolve" | "reveal">("idle");
+
+  useEffect(() => {
+    try {
+      getDeviceId();
+    } catch (deviceIdError) {
+      console.warn("Could not initialize the device ID:", deviceIdError);
+    }
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -73,10 +70,24 @@ export default function SearchForm({ onPhotoMotion }: { onPhotoMotion: (motion: 
       </form>
       {error && <p className="error">{error}</p>}
       {result && motion !== "idle" && <span className={`site-blackout is-${motion}`} aria-hidden="true" />}
-      {result && (
-        <section className={`results ${motion !== "idle" ? `is-${motion}` : ""}`} aria-live="polite">
-          <ResultCard title="Science" result={result.science} type="science" />
-          <ResultCard title="Fantasy / RPG" result={result.fantasy} type="fantasy" />
+      {(result || loading) && (
+        <section
+          className={`results ${motion !== "idle" ? `is-${motion}` : ""}`}
+          aria-live="polite"
+          aria-busy={loading}
+        >
+          <ResultCard
+            title="Science"
+            query={result?.query ?? query}
+            state={loading ? { status: "loading" } : result?.science ?? { status: "empty" }}
+            type="science"
+          />
+          <ResultCard
+            title="Fantasy / RPG"
+            query={result?.query ?? query}
+            state={loading ? { status: "loading" } : result?.fantasy ?? { status: "empty" }}
+            type="fantasy"
+          />
           {motion !== "idle" && <span className="word-substance" aria-hidden="true" />}
         </section>
       )}
@@ -84,7 +95,48 @@ export default function SearchForm({ onPhotoMotion }: { onPhotoMotion: (motion: 
   );
 }
 
-function ResultCard({ title, result, type }: { title: string; result: Result; type: "science" | "fantasy" }) {
+function ResultCard({
+  title,
+  query,
+  state,
+  type,
+}: {
+  title: string;
+  query: string;
+  state: ResultCardState;
+  type: "science" | "fantasy";
+}) {
+  if (state.status === "loading") {
+    return (
+      <article className={`result-card result-${type}`} aria-busy="true">
+        <p className="card-label">{title}</p>
+        <p className="result-state" role="status">Searching {title.toLowerCase()}...</p>
+      </article>
+    );
+  }
+
+  if (state.status === "empty") {
+    return (
+      <article className={`result-card result-${type}`}>
+        <p className="card-label">{title}</p>
+        <p className="result-state">No {title.toLowerCase()} result found for &ldquo;{query}&rdquo;.</p>
+      </article>
+    );
+  }
+
+  if (state.status === "error") {
+    return (
+      <article className={`result-card result-${type}`}>
+        <p className="card-label">{title}</p>
+        <p className="result-state" role="alert">{state.message}</p>
+      </article>
+    );
+  }
+
+  return <FoundResultCard title={title} result={state.result} type={type} />;
+}
+
+function FoundResultCard({ title, result, type }: { title: string; result: SearchResult; type: "science" | "fantasy" }) {
   return (
     <article className={`result-card result-${type}`}>
       <p className="card-label">{title}</p>

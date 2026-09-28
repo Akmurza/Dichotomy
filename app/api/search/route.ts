@@ -1,14 +1,8 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import type { SearchResponse, SearchResult, SearchSideState } from "@/lib/search-types";
 import { NextResponse } from "next/server";
 
 const OPENALEX_API_URL = "https://api.openalex.org/works";
-
-type SearchResult = {
-  sentence: string;
-  source: string;
-  sourceUrl: string | null;
-  isFallback?: boolean;
-};
 
 type OpenAlexWork = {
   title?: string;
@@ -22,6 +16,18 @@ type OpenAlexWork = {
 };
 
 type OpenAlexResponse = { results?: OpenAlexWork[] };
+
+function toSideState(
+  outcome: PromiseSettledResult<SearchResult | null>,
+  source: "Science" | "Fantasy",
+): SearchSideState {
+  if (outcome.status === "rejected") {
+    console.error(`${source} search failed:`, outcome.reason);
+    return { status: "error", message: `${source} search is temporarily unavailable.` };
+  }
+
+  return outcome.value ? { status: "found", result: outcome.value } : { status: "empty" };
+}
 
 async function withCacheRetry<T>(operation: () => Promise<T>, label: string): Promise<T> {
   let lastError: unknown;
@@ -128,52 +134,60 @@ export async function POST(request: Request) {
   }
 
   const normalizedQuery = query.toLocaleLowerCase();
-  const supabase = await createSupabaseServerClient();
-  let cached;
+  let supabase: Awaited<ReturnType<typeof createSupabaseServerClient>> | null = null;
   try {
-    cached = await withCacheRetry(async () => {
-      const { data, error } = await supabase
-        .from("search_cache")
-        .select("science_result, fantasy_result")
-        .eq("query", normalizedQuery)
-        .maybeSingle();
-      if (error) throw new Error(`Cache lookup failed: ${error.message}`);
-      return data;
-    }, "read");
+    supabase = await createSupabaseServerClient();
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Cache lookup failed.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("Supabase client initialization failed:", error);
   }
+
+  let cached: { science_result: SearchResult | null; fantasy_result: SearchResult | null } | null = null;
+  if (supabase) {
+    try {
+      cached = await withCacheRetry(async () => {
+        const { data, error } = await supabase
+          .from("search_cache")
+          .select("science_result, fantasy_result")
+          .eq("query", normalizedQuery)
+          .maybeSingle();
+        if (error) throw new Error(`Cache lookup failed: ${error.message}`);
+        return data;
+      }, "read");
+    } catch (error) {
+      console.warn("Search cache read failed; continuing with live searches:", error);
+    }
+  }
+
   if (cached?.science_result && cached.fantasy_result) {
     if (normalizedQuery === "dragon") {
       console.log("Fantasy result for dragon (cache):", JSON.stringify(cached.fantasy_result));
     }
-    return NextResponse.json({
+    const response: SearchResponse = {
       query,
-      science: cached.science_result,
-      fantasy: cached.fantasy_result,
+      science: { status: "found", result: cached.science_result },
+      fantasy: { status: "found", result: cached.fantasy_result },
       cached: true,
-    });
+    };
+    return NextResponse.json(response);
   }
 
-  try {
-    const [science, fantasy] = await Promise.all([
-      fetchScience(query),
-      fetchFantasy(supabase, query),
-    ]);
-    if (!science || !fantasy) {
-      return NextResponse.json(
-        { error: `No complete science and fantasy match found for "${query}".` },
-        { status: 404 },
-      );
-    }
+  const fantasySearch = supabase
+    ? fetchFantasy(supabase, query)
+    : Promise.reject(new Error("Supabase client is unavailable."));
+  const [scienceOutcome, fantasyOutcome] = await Promise.allSettled([
+    fetchScience(query),
+    fantasySearch,
+  ]);
+  const science = toSideState(scienceOutcome, "Science");
+  const fantasy = toSideState(fantasyOutcome, "Fantasy");
 
+  if (supabase && science.status === "found" && fantasy.status === "found") {
     try {
       await withCacheRetry(async () => {
         const { error } = await supabase.from("search_cache").upsert({
           query: normalizedQuery,
-          science_result: science,
-          fantasy_result: fantasy,
+          science_result: science.result,
+          fantasy_result: fantasy.result,
           updated_at: new Date().toISOString(),
         }, { onConflict: "query" });
         if (error) throw new Error(`Cache write failed: ${error.message}`);
@@ -181,10 +195,8 @@ export async function POST(request: Request) {
     } catch (error) {
       console.warn("Search cache write failed after retries:", error);
     }
-
-    return NextResponse.json({ query, science, fantasy, cached: false });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Search failed.";
-    return NextResponse.json({ error: message }, { status: 502 });
   }
+
+  const response: SearchResponse = { query, science, fantasy, cached: false };
+  return NextResponse.json(response);
 }
