@@ -8,7 +8,7 @@ setDefaultResultOrder("ipv4first");
 loadEnv({ path: ".env.local" });
 loadEnv();
 
-const INSERT_BATCH_SIZE = 200;
+const INSERT_BATCH_SIZE = 50;
 const MIN_SENTENCE_LENGTH = 20;
 const MAX_SENTENCE_LENGTH = 400;
 const GUTENBERG_BOOKS = [
@@ -38,6 +38,8 @@ type RpgEntryInsert = {
   source_url: string;
   content: string;
   sentence: string;
+  context_before: string | null;
+  context_after: string | null;
 };
 type IngestionDatabase = {
   public: {
@@ -91,6 +93,16 @@ async function fetchText(url: string): Promise<string> {
 
 function extractText(value: string | string[] | undefined): string {
   return Array.isArray(value) ? value.join(" ") : value ?? "";
+}
+
+function withContext(sentences: string[], source: Omit<RpgEntryInsert, "content" | "sentence" | "context_before" | "context_after">): RpgEntryInsert[] {
+  return sentences.map((sentence, index) => ({
+    ...source,
+    content: sentence,
+    sentence,
+    context_before: sentences[index - 1] ?? null,
+    context_after: sentences[index + 1] ?? null,
+  }));
 }
 
 function splitSentences(rawText: string): string[] {
@@ -148,16 +160,12 @@ async function collectSrdEntries(): Promise<RpgEntryInsert[]> {
         continue;
       }
       const itemUrl = `https://www.dnd5eapi.co/api/2014/${resource.endpoint}/${item.index}`;
-      for (const sentence of splitSentences(extractText(item.desc))) {
-        entries.push({
+      entries.push(...withContext(splitSentences(extractText(item.desc)), {
           source_type: "srd",
           source_title: resource.title,
           source_author: null,
           source_url: itemUrl,
-          content: sentence,
-          sentence,
-        });
-      }
+      }));
     }
     console.log(`Collected SRD ${resource.title}: ${entries.length} cumulative entries.`);
   }
@@ -172,16 +180,12 @@ async function collectGutenbergEntries(): Promise<RpgEntryInsert[]> {
     const textUrl = `https://www.gutenberg.org/cache/epub/${book.id}/pg${book.id}.txt`;
     const text = await fetchText(textUrl);
     const sourceUrl = `https://www.gutenberg.org/ebooks/${book.id}`;
-    for (const sentence of splitSentences(text)) {
-      entries.push({
+    entries.push(...withContext(splitSentences(text), {
         source_type: "gutenberg",
         source_title: book.title,
         source_author: book.author,
         source_url: sourceUrl,
-        content: sentence,
-        sentence,
-      });
-    }
+    }));
     console.log(`Collected Gutenberg ${book.id}: ${entries.length} cumulative entries.`);
   }
 
@@ -194,8 +198,20 @@ async function insertEntries(
 ): Promise<void> {
   for (let start = 0; start < entries.length; start += INSERT_BATCH_SIZE) {
     const batch = entries.slice(start, start + INSERT_BATCH_SIZE);
-    const { error } = await supabase.from("rpg_entries").insert(batch);
-    if (error) throw new Error(`Insert failed at row ${start}: ${error.message}`);
+    let inserted = false;
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= 5 && !inserted; attempt += 1) {
+      try {
+        const { error } = await supabase.from("rpg_entries").insert(batch);
+        if (error) throw new Error(error.message);
+        inserted = true;
+      } catch (error) {
+        lastError = error;
+        console.warn(`Insert batch ${start}-${start + batch.length} attempt ${attempt} failed:`, error);
+        if (attempt < 5) await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+      }
+    }
+    if (!inserted) throw new Error(`Insert failed at row ${start}: ${lastError instanceof Error ? lastError.message : lastError}`);
     console.log(`Inserted ${Math.min(start + batch.length, entries.length)}/${entries.length}.`);
   }
 }

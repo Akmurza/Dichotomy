@@ -366,6 +366,34 @@ button:disabled {
   z-index: 1;
 }
 
+.result-controls {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 22px;
+  margin-top: 26px;
+}
+
+.text-control {
+  flex: none;
+  min-height: auto;
+  padding: 0 0 5px;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.text-control:hover,
+.text-control:focus-visible {
+  background: transparent;
+  color: var(--orange);
+}
+
 
 
 /* experemental fantasy block*/
@@ -654,6 +682,51 @@ blockquote {
   background: #b9aecb;
 }
 
+.saved-page {
+  min-height: 100vh;
+  padding: 0 4vw 80px;
+}
+
+.saved-intro {
+  padding: clamp(80px, 12vh, 150px) 0 50px;
+}
+
+.saved-intro h1 {
+  color: var(--foreground);
+}
+
+.saved-empty {
+  padding: 32px 0;
+  font-family: var(--font-geist-mono), monospace;
+}
+
+.saved-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.saved-item {
+  display: grid;
+  gap: 28px;
+  min-height: 360px;
+  padding: 28px;
+  background: var(--white);
+  border-top: 4px solid var(--orange);
+}
+
+.saved-query,
+.saved-label {
+  margin: 0 0 14px;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.saved-query { color: var(--orange); font-weight: 700; }
+.saved-item blockquote { font-size: 18px; }
+
 .photo-stage::before {
   content: "DICHOTOMY  DICHOTOMY  DICHOTOMY\A DICHOTOMY  DICHOTOMY  DICHOTOMY\A DICHOTOMY  DICHOTOMY  DICHOTOMY\A DICHOTOMY  DICHOTOMY  DICHOTOMY";
   position: absolute;
@@ -686,6 +759,79 @@ blockquote {
     linear-gradient(to bottom, var(--background) 0%, transparent 17%),
     linear-gradient(to right, var(--background) 0%, transparent 13%);
   opacity: .92;
+}
+
+.at-home-fragment {
+  position: absolute;
+  top: 2%;
+  left: 8%;
+  width: calc(62% + 2cm);
+  height: calc(43% + 2cm);
+  z-index: 10;
+  overflow: visible;
+  color: var(--foreground);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: clamp(18px, 2vw, 30px);
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-decoration: none;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  transition: transform 220ms cubic-bezier(.2, .8, .2, 1), filter 220ms ease;
+}
+
+.at-home-fragment-photo {
+  position: absolute !important;
+  top: -4.17% !important;
+  left: -2.86% !important;
+  width: 143% !important;
+  height: 208% !important;
+  object-fit: cover;
+  object-position: center 58%;
+  z-index: 0;
+  filter: none;
+}
+
+.at-home-fragment span {
+  position: absolute;
+  top: 58%;
+  left: 8%;
+  z-index: 1;
+  display: block;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, .35);
+}
+
+.at-home-fragment:hover,
+.at-home-fragment:focus-visible {
+  transform: translate(2px, -8px) rotate(-.4deg) scale(1.015);
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, .42));
+}
+
+.saved-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px 0;
+  color: var(--foreground);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.saved-home-link {
+  color: inherit;
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 18px;
+  letter-spacing: -.04em;
+  text-decoration: none;
+  text-transform: none;
+}
+
+.saved-home-link:hover,
+.saved-home-link:focus-visible {
+  color: var(--orange);
 }
 
 .photo-piece {
@@ -775,6 +921,8 @@ blockquote {
   .footer { font-size: 10px; }
   .photo-stage { height: auto; min-height: 0; aspect-ratio: 3 / 4; }
   .result-card { min-height: 0; }
+  .saved-page { padding: 0 20px 50px; }
+  .saved-grid { grid-template-columns: 1fr; }
 }
 
 button:hover, button:focus-visible {

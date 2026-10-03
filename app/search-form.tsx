@@ -14,7 +14,6 @@ export default function SearchForm({ onPhotoMotion }: { onPhotoMotion: (motion: 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [motion, setMotion] = useState<"idle" | "dissolve" | "reveal">("idle");
-
   useEffect(() => {
     try {
       getDeviceId();
@@ -34,7 +33,7 @@ export default function SearchForm({ onPhotoMotion }: { onPhotoMotion: (motion: 
       const response = await fetch("/api/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query, refresh: Boolean(result) }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Search failed.");
@@ -144,7 +143,8 @@ function FoundResultCard({ title, result, type }: { title: string; result: Searc
         “{type === "fantasy"
           ? result.sentence.split(" ").map((word, index) => (
             <Fragment key={`${word}-${index}`}>
-              {index > 0 && " "}<span className="fragment" style={{ "--fragment-index": index } as CSSProperties}>{word}</span>
+              {index > 0 && " "}
+              <span className="fragment" style={{ "--fragment-index": index } as CSSProperties}>{word}</span>
             </Fragment>
           ))
           : result.sentence}”

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import SearchForm from "./search-form";
 
@@ -40,10 +41,14 @@ export default function Home() {
         <div className="hero-copy">
           <p className="eyebrow">Vocabulary / extreme contexts</p>
           <h1>Put a <span className="flicker">word</span><br /><span>under pressure.</span></h1>
-          <p className="intro">See the same language collide with a scientific paper and a fantasy world. Real sources, sharply different worlds.</p>
+          <p className="intro">See the same language collide with a scientific paper and a fantasy world. Real sources, sharply different poles.</p>
           <SearchForm onPhotoMotion={setPhotoMotion} />
         </div>
         <div className={`photo-stage is-${photoMotion}`} aria-label="Laundry moving above a Tbilisi courtyard">
+          <Link className="at-home-fragment" href="/saved" aria-label="Open saved vocabulary">
+            <Image className="at-home-fragment-photo" src="/images.jpeg" alt="" aria-hidden="true" fill sizes="(max-width: 640px) 100vw, 44vw" />
+            <span>AT HOME</span>
+          </Link>
           {Array.from({ length: 6 }, (_, index) => (
             <Image
               className={`photo-piece photo-piece-${index + 1}`}
