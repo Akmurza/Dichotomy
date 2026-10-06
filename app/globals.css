@@ -648,6 +648,13 @@ blockquote {
   margin: 32px 0 0;
 }
 
+.source-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
 .result-state {
   margin: 0;
   max-width: 42ch;

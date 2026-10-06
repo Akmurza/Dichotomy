@@ -5,6 +5,10 @@ import { getDeviceId } from "@/lib/device-id";
 import type { SearchResponse, SearchResult, SearchSideState } from "@/lib/search-types";
 
 type ResultCardState = SearchSideState | { status: "loading" };
+type SeenPair = {
+  science: { sentence: string; sourceUrl: string | null };
+  fantasy: { sentence: string; sourceUrl: string | null };
+};
 
 type PhotoMotion = "idle" | "breaking" | "reassembled";
 
@@ -14,6 +18,43 @@ export default function SearchForm({ onPhotoMotion }: { onPhotoMotion: (motion: 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [motion, setMotion] = useState<"idle" | "dissolve" | "reveal">("idle");
+  const [saved, setSaved] = useState(false);
+
+  function seenPairsFor(queryValue: string): SeenPair[] {
+    try {
+      const key = `dichotomy-seen:${queryValue.toLocaleLowerCase()}`;
+      return JSON.parse(window.sessionStorage.getItem(key) ?? "[]") as SeenPair[];
+    } catch {
+      return [];
+    }
+  }
+
+  function rememberPair(response: SearchResponse) {
+    if (response.science.status !== "found" || response.fantasy.status !== "found") return;
+    const key = `dichotomy-seen:${response.query.toLocaleLowerCase()}`;
+    const seen = seenPairsFor(response.query);
+    seen.push({
+      science: { sentence: response.science.result.sentence, sourceUrl: response.science.result.sourceUrl },
+      fantasy: { sentence: response.fantasy.result.sentence, sourceUrl: response.fantasy.result.sourceUrl },
+    });
+    window.sessionStorage.setItem(key, JSON.stringify(seen.slice(-50)));
+  }
+
+  async function saveResult() {
+    if (!result || result.science.status !== "found" || result.fantasy.status !== "found") return;
+    const response = await fetch("/api/saved", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        deviceId: getDeviceId(),
+        query: result.query,
+        science: result.science.result,
+        fantasy: result.fantasy.result,
+      }),
+    });
+    if (!response.ok) throw new Error("Could not save this pairing.");
+    setSaved(true);
+  }
   useEffect(() => {
     try {
       getDeviceId();
@@ -25,6 +66,7 @@ export default function SearchForm({ onPhotoMotion }: { onPhotoMotion: (motion: 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
+    setSaved(false);
     onPhotoMotion("breaking");
     setError("");
     if (result) setMotion("dissolve");
@@ -33,11 +75,12 @@ export default function SearchForm({ onPhotoMotion }: { onPhotoMotion: (motion: 
       const response = await fetch("/api/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, refresh: Boolean(result) }),
+        body: JSON.stringify({ query, refresh: Boolean(result), seen: seenPairsFor(query) }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Search failed.");
       onPhotoMotion("reassembled");
+      rememberPair(data);
       if (!result) {
         setResult(data);
         setMotion("reveal");
@@ -80,12 +123,16 @@ export default function SearchForm({ onPhotoMotion }: { onPhotoMotion: (motion: 
             query={result?.query ?? query}
             state={loading ? { status: "loading" } : result?.science ?? { status: "empty" }}
             type="science"
+            saved={saved}
+            onSave={() => saveResult().catch((requestError) => setError(requestError instanceof Error ? requestError.message : "Could not save this pairing."))}
           />
           <ResultCard
             title="Fantasy / RPG"
             query={result?.query ?? query}
             state={loading ? { status: "loading" } : result?.fantasy ?? { status: "empty" }}
             type="fantasy"
+            saved={saved}
+            onSave={() => saveResult().catch((requestError) => setError(requestError instanceof Error ? requestError.message : "Could not save this pairing."))}
           />
           {motion !== "idle" && <span className="word-substance" aria-hidden="true" />}
         </section>
@@ -99,11 +146,15 @@ function ResultCard({
   query,
   state,
   type,
+  saved,
+  onSave,
 }: {
   title: string;
   query: string;
   state: ResultCardState;
   type: "science" | "fantasy";
+  saved: boolean;
+  onSave: () => void;
 }) {
   if (state.status === "loading") {
     return (
@@ -132,25 +183,41 @@ function ResultCard({
     );
   }
 
-  return <FoundResultCard title={title} result={state.result} type={type} />;
+  return <FoundResultCard title={title} result={state.result} type={type} saved={saved} onSave={onSave} />;
 }
 
-function FoundResultCard({ title, result, type }: { title: string; result: SearchResult; type: "science" | "fantasy" }) {
+function FoundResultCard({ title, result, type, saved, onSave }: { title: string; result: SearchResult; type: "science" | "fantasy"; saved: boolean; onSave: () => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const context = expanded && result.context?.length ? result.context : [result.sentence];
+
   return (
     <article className={`result-card result-${type}`}>
       <p className="card-label">{title}</p>
       <blockquote>
-        “{type === "fantasy"
-          ? result.sentence.split(" ").map((word, index) => (
-            <Fragment key={`${word}-${index}`}>
-              {index > 0 && " "}
-              <span className="fragment" style={{ "--fragment-index": index } as CSSProperties}>{word}</span>
-            </Fragment>
-          ))
-          : result.sentence}”
+        “{context.map((sentence, sentenceIndex) => <Fragment key={`${sentence}-${sentenceIndex}`}>
+          {sentenceIndex > 0 && " "}
+          {type === "fantasy"
+            ? sentence.split(" ").map((word, index) => (
+              <Fragment key={`${word}-${index}`}>
+                {index > 0 && " "}
+                <span className="fragment" style={{ "--fragment-index": index } as CSSProperties}>{word}</span>
+              </Fragment>
+            ))
+            : sentence}
+        </Fragment>)}”
       </blockquote>
-      <p className="source">{result.source}</p>
-      {result.isFallback && <p className="fallback">Matched through a related word.</p>}
+      <p className="source">
+        {result.sourceUrl ? (
+          <a className="source-link" href={result.sourceUrl} target="_blank" rel="noreferrer">
+            {result.source}
+          </a>
+        ) : result.source}
+      </p>
+      {result.isFallback && <p className="fallback">Matched through related word: {result.fallbackWord ?? "a synonym"}.</p>}
+      <div className="result-controls">
+        {result.context && result.context.length > 1 && <button type="button" className="text-control" onClick={() => setExpanded((value) => !value)}>{expanded ? "Collapse" : "Expand"}</button>}
+        <button type="button" className="text-control" onClick={onSave}>{saved ? "Saved" : "Save"}</button>
+      </div>
     </article>
   );
 }

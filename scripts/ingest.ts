@@ -236,9 +236,7 @@ async function main(): Promise<void> {
   }
   const supabase = createClient<IngestionDatabase>(
     requiredEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    process.env.SUPABASE_SERVICE_ROLE_KEY ??
-      process.env.SUPABASE_SERVICE_KEY ??
-      requiredEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"),
+    requiredEnv("SUPABASE_SERVICE_ROLE_KEY"),
   );
   const gutenbergEntries = only === "srd" ? [] : await collectGutenbergEntries();
   if (gutenbergEntries.length > 0) await insertEntries(supabase, gutenbergEntries);
