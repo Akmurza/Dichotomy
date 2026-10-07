@@ -35,7 +35,10 @@ export default function Home() {
       </svg>
       <header className="topbar">
         <span className="wordmark">Dichotomy</span>
-        <span className="status">SCIENCE / FANTASY</span>
+        <nav className="topbar-links" aria-label="Main navigation">
+          <Link className="topbar-link" href="/saved">Saved <span aria-hidden="true">↗</span></Link>
+          <span className="status">SCIENCE / FANTASY</span>
+        </nav>
       </header>
       <section className="hero">
         <div className="hero-copy">

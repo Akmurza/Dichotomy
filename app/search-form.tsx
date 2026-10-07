@@ -7,6 +7,8 @@ import type { SearchResponse, SearchResult, SearchSideState } from "@/lib/search
 type ResultCardState = SearchSideState | { status: "loading" };
 
 type PhotoMotion = "idle" | "breaking" | "reassembled";
+type SavedState = "checking" | "saved" | "unsaved" | "saving" | "error";
+type SavedItem = { query: string };
 
 export default function SearchForm({ onPhotoMotion }: { onPhotoMotion: (motion: PhotoMotion) => void }) {
   const [query, setQuery] = useState("");
@@ -14,6 +16,7 @@ export default function SearchForm({ onPhotoMotion }: { onPhotoMotion: (motion: 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [motion, setMotion] = useState<"idle" | "dissolve" | "reveal">("idle");
+  const [savedState, setSavedState] = useState<SavedState>("checking");
   useEffect(() => {
     try {
       getDeviceId();
@@ -24,7 +27,9 @@ export default function SearchForm({ onPhotoMotion }: { onPhotoMotion: (motion: 
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const previousSavedState = savedState;
     setLoading(true);
+    setSavedState("checking");
     onPhotoMotion("breaking");
     setError("");
     if (result) setMotion("dissolve");
@@ -40,22 +45,98 @@ export default function SearchForm({ onPhotoMotion }: { onPhotoMotion: (motion: 
       onPhotoMotion("reassembled");
       if (!result) {
         setResult(data);
+        void refreshSavedState(data);
         setMotion("reveal");
         window.setTimeout(() => setMotion("idle"), 900);
       } else {
         window.setTimeout(() => {
           setResult(data);
+          void refreshSavedState(data);
           setMotion("reveal");
           window.setTimeout(() => setMotion("idle"), 1200);
         }, 850);
       }
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Search failed.");
+      setSavedState(
+        previousSavedState === "saved" || previousSavedState === "unsaved"
+          ? previousSavedState
+          : "error",
+      );
       setMotion("idle");
       onPhotoMotion("idle");
     } finally {
       setLoading(false);
     }
+  }
+
+  async function refreshSavedState(searchResult: SearchResponse) {
+    setSavedState("checking");
+    try {
+      const response = await fetch(`/api/saved?deviceId=${encodeURIComponent(getDeviceId())}`);
+      const data = await response.json() as { items?: SavedItem[]; error?: string };
+      if (!response.ok) throw new Error(data.error ?? "Could not check saved items.");
+      const normalizedQuery = searchResult.query.trim().toLocaleLowerCase();
+      const matchingItem = data.items?.find(
+        (item) => item.query.trim().toLocaleLowerCase() === normalizedQuery,
+      );
+      setSavedState(matchingItem ? "saved" : "unsaved");
+    } catch (requestError) {
+      setSavedState("error");
+      setError(requestError instanceof Error ? requestError.message : "Could not check saved items.");
+    }
+  }
+
+  async function savePair() {
+    if (
+      !result
+      || result.science.status !== "found"
+      || result.fantasy.status !== "found"
+      || savedState === "saved"
+    ) return;
+
+    setSavedState("saving");
+    setError("");
+    try {
+      const response = await fetch("/api/saved", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deviceId: getDeviceId(),
+          query: result.query,
+          science: result.science.result,
+          fantasy: result.fantasy.result,
+        }),
+      });
+      const data = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(data.error ?? "Could not update saved items.");
+      setSavedState("saved");
+    } catch (requestError) {
+      setSavedState("unsaved");
+      setError(requestError instanceof Error ? requestError.message : "Could not update saved items.");
+    }
+  }
+
+  const canSavePair = result?.science.status === "found" && result.fantasy.status === "found";
+
+  function saveButton() {
+    return (
+      <div className="save-pair-row">
+        <button
+          className="save-pair-button"
+          type="button"
+          onClick={() => savedState === "error" && result ? void refreshSavedState(result) : void savePair()}
+          disabled={savedState === "checking" || savedState === "saving" || savedState === "saved"}
+          aria-pressed={savedState === "saved"}
+        >
+          {savedState === "checking" ? "Checking..."
+            : savedState === "saving" ? "Saving..."
+              : savedState === "saved" ? "Saved ✓"
+                : savedState === "error" ? "Retry status"
+                  : "Save pair"}
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -87,6 +168,7 @@ export default function SearchForm({ onPhotoMotion }: { onPhotoMotion: (motion: 
             state={loading ? { status: "loading" } : result?.fantasy ?? { status: "empty" }}
             type="fantasy"
           />
+          {canSavePair && saveButton()}
           {motion !== "idle" && <span className="word-substance" aria-hidden="true" />}
         </section>
       )}
