@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 
 const OPENALEX_API_URL = "https://api.openalex.org/works";
 const DATAMUSE_API_URL = "https://api.datamuse.com/words";
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODEL = "qwen/qwen3.8-27b";
 
 type SeenPair = {
   science: { sentence: string; sourceUrl: string | null };
@@ -79,7 +81,7 @@ function sentenceWindow(text: string, query: string): { sentence: string; contex
   };
 }
 
-async function fetchScience(query: string, seen: SeenPair[]): Promise<SearchResult | null> {
+async function fetchScience(query: string, seen: SeenPair[], allowRelated = true): Promise<SearchResult | null> {
   const params = new URLSearchParams({
     search: query,
     filter: "has_abstract:true",
@@ -112,23 +114,122 @@ async function fetchScience(query: string, seen: SeenPair[]): Promise<SearchResu
       sourceUrl,
     };
   }
+  if (allowRelated) {
+    let groqTerms: string[] = [];
+    try {
+      groqTerms = await fetchGroqTerms(query, "science");
+    } catch (error) {
+      console.warn("Groq Science fallback failed; returning no fallback result:", error);
+    }
+    for (const relatedTerm of groqTerms) {
+      const fallback = await fetchScience(relatedTerm, seen, false);
+      if (fallback) return { ...fallback, isFallback: true, fallbackWord: relatedTerm };
+    }
+  }
   return null;
 }
 
 async function fetchFantasy(supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>, query: string, seen: SeenPair[]): Promise<SearchResult | null> {
-  const exact = await searchFantasyEntries(supabase, query, seen);
-  if (exact) return exact;
+  try {
+    const exact = await searchFantasyEntries(supabase, query, seen);
+    if (exact) return exact;
+  } catch (error) {
+    console.warn("Fantasy exact search failed; continuing with fallback terms:", error);
+  }
 
-  const synonymResponse = await fetch(`${DATAMUSE_API_URL}?rel_syn=${encodeURIComponent(query)}&max=5`, {
-    next: { revalidate: 300 },
-  });
-  if (!synonymResponse.ok) return null;
-  const synonyms = (await synonymResponse.json()) as Array<{ word?: string }>;
-  for (const synonym of synonyms.map((item) => item.word).filter((word): word is string => Boolean(word))) {
-    const fallback = await searchFantasyEntries(supabase, synonym, seen);
-    if (fallback) return { ...fallback, isFallback: true, fallbackWord: synonym };
+  const datamuseTerms = new Set<string>();
+  try {
+    const synonymResponse = await fetch(`${DATAMUSE_API_URL}?rel_syn=${encodeURIComponent(query)}&max=5`, {
+      next: { revalidate: 300 },
+    });
+    if (synonymResponse.ok) {
+      const synonyms = (await synonymResponse.json()) as Array<{ word?: string }>;
+      synonyms.map((item) => item.word)
+        .filter((word): word is string => Boolean(word))
+        .forEach((word) => datamuseTerms.add(word));
+    } else {
+      console.warn(`Datamuse returned ${synonymResponse.status}; continuing with Groq terms.`);
+    }
+
+    const meaningResponse = await fetch(`${DATAMUSE_API_URL}?ml=${encodeURIComponent(query)}&max=20`, {
+      next: { revalidate: 300 },
+    });
+    if (meaningResponse.ok) {
+      const relatedWords = (await meaningResponse.json()) as Array<{ word?: string }>;
+      relatedWords.map((item) => item.word)
+        .filter((word): word is string => Boolean(word))
+        .forEach((word) => datamuseTerms.add(word));
+    } else {
+      console.warn(`Datamuse meaning lookup returned ${meaningResponse.status}.`);
+    }
+  } catch (error) {
+    console.warn("Datamuse fallback failed; continuing with Groq terms:", error);
+  }
+
+  for (const relatedTerm of datamuseTerms) {
+    if (relatedTerm.toLocaleLowerCase() === query.toLocaleLowerCase()) continue;
+    try {
+      const fallback = await searchFantasyEntries(supabase, relatedTerm, seen);
+      if (fallback) return { ...fallback, isFallback: true, fallbackWord: relatedTerm };
+    } catch (error) {
+      console.warn(`Fantasy Datamuse-term search failed for ${relatedTerm}:`, error);
+    }
+  }
+
+  let groqTerms: string[] = [];
+  try {
+    groqTerms = await fetchGroqTerms(query, "fantasy");
+  } catch (error) {
+    console.warn("Groq Fantasy fallback failed; returning no fallback result:", error);
+  }
+  for (const relatedTerm of groqTerms) {
+    try {
+      const fallback = await searchFantasyEntries(supabase, relatedTerm, seen);
+      if (fallback) return { ...fallback, isFallback: true, fallbackWord: relatedTerm };
+    } catch (error) {
+      console.warn(`Fantasy Groq-term search failed for ${relatedTerm}:`, error);
+    }
   }
   return null;
+}
+
+async function fetchGroqTerms(query: string, domain: "science" | "fantasy"): Promise<string[]> {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) return [];
+
+  const response = await fetch(GROQ_API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      temperature: 0,
+      max_tokens: 200,
+      messages: [{
+        role: "system",
+        content: "Return only a JSON array of up to five short English words or phrases that are semantic substitutes likely to appear in real source text. Never invent quotations, sources, books, articles, or citations.",
+      }, {
+        role: "user",
+        content: `Suggest up to five real English semantic substitutes for "${query}" that are likely to appear in ${domain} source text. Prefer ordinary words such as wonderful, extraordinary, magical, or amazing over descriptions like "fantasy wordplay". Return JSON only.`,
+      }],
+    }),
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    console.warn(`Groq related-term request returned ${response.status}.`);
+    return [];
+  }
+
+  const payload = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
+  const content = payload.choices?.[0]?.message?.content?.trim() ?? "";
+  try {
+    const jsonContent = content.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+    const parsed = JSON.parse(jsonContent) as unknown;
+    return Array.isArray(parsed)
+      ? parsed.filter((term): term is string => typeof term === "string" && term.trim().length > 0).slice(0, 5)
+      : [];
+  } catch {
+    return [];
+  }
 }
 
 async function searchFantasyEntries(

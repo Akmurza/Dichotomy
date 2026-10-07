@@ -28,6 +28,13 @@ const GUTENBERG_BOOKS = [
   { id: 22382, title: "The Enchanted Type-Writer", author: "John Kendrick Bangs" },
   { id: 3207, title: "Of Water and the Spirit", author: "Henryk Sienkiewicz" },
   { id: 236, title: "The Jungle Book", author: "Rudyard Kipling" },
+  { id: 35, title: "The Time Machine", author: "H. G. Wells", textUrl: "https://www.gutenberg.org/files/35/35-0.txt" },
+  { id: 36, title: "The War of the Worlds", author: "H. G. Wells", textUrl: "https://www.gutenberg.org/files/36/36-0.txt" },
+  { id: 409, title: "Nineteen Eighty-Four", author: "George Orwell", textUrl: "https://www.gutenberg.org/files/409/409.txt" },
+  { id: 1164, title: "The Iron Heel", author: "Jack London", textUrl: "https://www.gutenberg.org/files/1164/1164-0.txt" },
+  { id: 21970, title: "The Scarlet Plague", author: "Jack London" },
+  { id: 18247, title: "The Last Man", author: "Mary Shelley" },
+  { id: 25067, title: "The Night Land", author: "William Hope Hodgson" },
 ];
 
 type SrdItem = { index?: string; name?: string; desc?: string | string[] };
@@ -177,7 +184,7 @@ async function collectGutenbergEntries(): Promise<RpgEntryInsert[]> {
   const entries: RpgEntryInsert[] = [];
 
   for (const book of GUTENBERG_BOOKS) {
-    const textUrl = `https://www.gutenberg.org/cache/epub/${book.id}/pg${book.id}.txt`;
+    const textUrl = book.textUrl ?? `https://www.gutenberg.org/cache/epub/${book.id}/pg${book.id}.txt`;
     const text = await fetchText(textUrl);
     const sourceUrl = `https://www.gutenberg.org/ebooks/${book.id}`;
     entries.push(...withContext(splitSentences(text), {

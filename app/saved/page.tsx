@@ -7,8 +7,8 @@ import { getDeviceId } from "@/lib/device-id";
 type SavedItem = {
   id: string;
   query: string;
-  science_result: { sentence: string; source: string; sourceUrl?: string | null };
-  fantasy_result: { sentence: string; source: string; sourceUrl?: string | null };
+  science_result: { sentence: string; source: string; sourceUrl?: string | null; fallbackWord?: string };
+  fantasy_result: { sentence: string; source: string; sourceUrl?: string | null; fallbackWord?: string };
   created_at: string;
 };
 
@@ -36,8 +36,8 @@ export default function SavedPage() {
         {items.map((item) => (
           <article className="saved-item" key={item.id}>
             <p className="saved-query">{item.query}</p>
-            <div><p className="saved-label">Science</p><blockquote>“{item.science_result.sentence}”</blockquote><p className="source">{item.science_result.sourceUrl ? <a className="source-link" href={item.science_result.sourceUrl} target="_blank" rel="noreferrer">{item.science_result.source}</a> : item.science_result.source}</p></div>
-            <div><p className="saved-label">Fantasy / RPG</p><blockquote>“{item.fantasy_result.sentence}”</blockquote><p className="source">{item.fantasy_result.sourceUrl ? <a className="source-link" href={item.fantasy_result.sourceUrl} target="_blank" rel="noreferrer">{item.fantasy_result.source}</a> : item.fantasy_result.source}</p></div>
+            <div><p className="saved-label">Science</p><blockquote>“{item.science_result.sentence}”</blockquote><p className="source">{item.science_result.sourceUrl ? <a className="source-link" href={item.science_result.sourceUrl} target="_blank" rel="noreferrer">{item.science_result.source}</a> : item.science_result.source}</p>{item.science_result.fallbackWord && <p className="saved-fallback">Matched through related word: {item.science_result.fallbackWord}.</p>}</div>
+            <div><p className="saved-label">Fantasy / RPG</p><blockquote>“{item.fantasy_result.sentence}”</blockquote><p className="source">{item.fantasy_result.sourceUrl ? <a className="source-link" href={item.fantasy_result.sourceUrl} target="_blank" rel="noreferrer">{item.fantasy_result.source}</a> : item.fantasy_result.source}</p>{item.fantasy_result.fallbackWord && <p className="saved-fallback">Matched through related word: {item.fantasy_result.fallbackWord}.</p>}</div>
           </article>
         ))}
       </section>
