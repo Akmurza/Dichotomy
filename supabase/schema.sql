@@ -7,9 +7,13 @@ create table if not exists public.rpg_entries (
     source_url text,
     content text not null,
     sentence text not null,
+    context_before text,
+    context_after text,
     content_tsv tsvector generated always as (to_tsvector('english', content)) stored,
     created_at timestamptz not null default now()
 );
+alter table public.rpg_entries add column if not exists context_before text;
+alter table public.rpg_entries add column if not exists context_after text;
 alter table public.rpg_entries drop constraint if exists rpg_entries_source_type_check;
 update public.rpg_entries
 set source_type = 'srd'

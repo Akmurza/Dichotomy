@@ -1,8 +1,10 @@
 export type SearchResult = {
   sentence: string;
+  context?: string[];
   source: string;
   sourceUrl: string | null;
   isFallback?: boolean;
+  fallbackWord?: string;
 };
 
 export type SearchSideState =
